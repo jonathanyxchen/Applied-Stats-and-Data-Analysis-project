@@ -1,0 +1,140 @@
+```{r}
+df_train_1 <- read.csv('TRAIN_ver04.csv', header = T)
+head(df_train_1)
+```
+
+```{r}
+object_columns_list <- c('CHNL','SELLER','FIRSTFLAG','PURPOSE','PROP','NO_UNITS','OCCSTAT','STATE','RELMORTGIND', 'FORCLOSED')
+for (name_i in colnames(df_train_1)) {
+  if(name_i %in% object_columns_list){
+    df_train_1[name_i] = as.factor(unlist(df_train_1[name_i]))
+  } else {
+      if(!(name_i == 'LID') && !(name_i == 'FORCLOSED')){df_train_1[name_i] = as.numeric(unlist(df_train_1[name_i]))}}
+}
+```
+
+```{r}
+head(df_train_1)
+```
+
+```{r}
+df_train_1_lr <- df_train_1[ , -which(colnames(df_train_1) %in% c("LID","FORCLOSED", "REMMNTHS", "TIMGAP2"))]
+head(df_train_1_lr)
+```
+
+```{r}
+mod.1 <- lm(NMONTHS ~ ., data = df_train_1_lr)
+summary(mod.1)
+```
+
+```{r}
+library("leaps") 
+b <- regsubsets(NMONTHS ~ ., data = df_train_1_lr)
+(rs <- summary(b))
+```
+
+```{r}
+a <- c(1,2,3)
+b <- c(T, F, F)
+```
+
+```{r}
+feature_list <- colnames(df_train_1[ , -which(colnames(df_train_1) %in% c("LID","ADJRMTHS","FORCLOSED", "REMMNTHS", "TIMGAP2", "NMONTHS"))])
+feature_list
+```
+
+```{r}
+feature_option <- rep(F, length(feature_list))
+feature_num <- 1:length(feature_list)
+aic_list <- rep(0, length(feature_list))
+aic_min <- Inf
+for (it in 1:length(feature_list)) {
+  for (i in feature_num[!feature_option]) {
+    feature_option_i <- feature_option
+    feature_option_i[i] <- T
+    feature_list_i <- append(feature_list[feature_option_i], 'NMONTHS')
+    mod_i <- lm(NMONTHS~., data = df_train_1[ , which(colnames(df_train_1) %in% feature_list_i)])
+    aic_list[i] <- AIC(mod_i)
+  }
+  if (min(aic_list)<aic_min){
+    aic_min <- min(aic_list)
+    feature_option[which.min(aic_list)] <- T
+    print(paste0(it, 'th'))
+    print(feature_list[feature_option])
+  } else {
+    break
+  }
+}
+```
+
+```{r}
+feature_list_final <- append(feature_list[feature_option], 'NMONTHS')
+feature_list_final
+mod_final <- lm(NMONTHS~., data = df_train_1[ , which(colnames(df_train_1) %in% feature_list_final)])
+summary(mod_final)
+AIC(mod_final)
+```
+
+```{r}
+feature_option <- rep(F, length(feature_list))
+feature_num <- 1:length(feature_list)
+bic_list <- rep(0, length(feature_list))
+bic_min <- Inf
+for (it in 1:length(feature_list)) {
+  for (i in feature_num[!feature_option]) {
+    feature_option_i <- feature_option
+    feature_option_i[i] <- T
+    feature_list_i <- append(feature_list[feature_option_i], 'NMONTHS')
+    mod_i <- lm(NMONTHS~., data = df_train_1[ , which(colnames(df_train_1) %in% feature_list_i)])
+    bic_list[i] <- BIC(mod_i)
+  }
+  if (min(bic_list)<bic_min){
+    bic_min <- min(bic_list)
+    feature_option[which.min(bic_list)] <- T
+    print(paste0(it, 'th'))
+    print(feature_list[feature_option])
+  } else {
+    break
+  }
+}
+```
+
+```{r}
+feature_list_final <- append(feature_list[feature_option], 'NMONTHS')
+feature_list_final
+mod_final <- lm(NMONTHS~., data = df_train_1[ , which(colnames(df_train_1) %in% feature_list_final)])
+summary(mod_final)
+BIC(mod_final)
+```
+
+```{r}
+feature_option <- rep(F, length(feature_list))
+feature_num <- 1:length(feature_list)
+adjr_list <- rep(0, length(feature_list))
+adjr_max <- -Inf
+for (it in 1:length(feature_list)) {
+  for (i in feature_num[!feature_option]) {
+    feature_option_i <- feature_option
+    feature_option_i[i] <- T
+    feature_list_i <- append(feature_list[feature_option_i], 'NMONTHS')
+    mod_i <- lm(NMONTHS~., data = df_train_1[ , which(colnames(df_train_1) %in% feature_list_i)])
+    adjr_list[i] <- summary(mod_i)$adj.r.squared
+  }
+  if (max(adjr_list)>adjr_max){
+    adjr_max <- max(adjr_list)
+    feature_option[which.max(adjr_list)] <- T
+    print(paste0(it, 'th'))
+    print(feature_list[feature_option])
+  } else {
+    break
+  }
+}
+```
+
+```{r}
+feature_list_final <- append(feature_list[feature_option], 'NMONTHS')
+feature_list_final
+mod_final <- lm(NMONTHS~., data = df_train_1[ , which(colnames(df_train_1) %in% feature_list_final)])
+summary(mod_final)
+```
+

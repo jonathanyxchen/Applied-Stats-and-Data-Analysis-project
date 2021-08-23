@@ -1,0 +1,2 @@
+data <- read.csv('TRAIN_ver04.csv')
+full_model <- regsubsets(NMONTHS ~ ORIGRATE + ORIGUPB + ORIGTERM + LOANAGE + OLTV + NUMBO + DTI + CSCOREB + DLQSTATUS + ACTPER_MO + GAP + TIMGAP1, data = data, nvmax = 12)
